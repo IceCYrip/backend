@@ -1,6 +1,10 @@
 const { Pool } = require('pg')
 const express = require('express')
 const app = express()
+const http = require('http')
+
+const server = http.createServer(app)
+
 const port = 5000
 require('dotenv').config()
 
@@ -17,7 +21,8 @@ const connectToDB = async () => {
     .connect()
     .then(async () => {
       console.log('Connected to database successfully')
-      app.listen(port, () => {
+
+      server.listen(port, () => {
         console.log(`Server is listening on port ${port}`)
       })
     })
@@ -27,3 +32,4 @@ const connectToDB = async () => {
 module.exports = connectToDB
 module.exports.app = app
 module.exports.pool = pool
+module.exports.server = server

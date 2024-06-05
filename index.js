@@ -1,11 +1,11 @@
-const { app, pool } = require('./db/connectToDb')
-const http = require('http')
-const server = http.createServer(app)
+const { app, pool, server } = require('./db/connectToDb')
 const { Server } = require('socket.io')
 const io = new Server(server)
 
 const initialiseDatabase = require('./db/initialiseDb')
 const connectToDB = require('./db/connectToDb')
+
+const userSocketMap = {} //{userId: socketId}
 
 app.get('/users', async (req, res) => {
   try {
@@ -20,6 +20,23 @@ app.get('/users', async (req, res) => {
 const startServer = async () => {
   await initialiseDatabase()
   await connectToDB()
+
+  io.on('connection', (socket) => {
+    console.log('socketId', socket.id)
+
+    const userId = socket.handshake.query.userId
+
+    if (!!userId) {
+      userSocketMap[userId] = socket.id
+    }
+
+    io.emit('getConnectedUsers', Object.keys(userSocketMap))
+
+    socket.on('disconnect', () => {
+      console.log('user disconnected', socket.id)
+      delete userSocketMap[userId]
+    })
+  })
 }
 
 startServer()
