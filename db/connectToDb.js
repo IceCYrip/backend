@@ -33,3 +33,4 @@ module.exports = connectToDB
 module.exports.app = app
 module.exports.pool = pool
 module.exports.server = server
+module.exports.express = express
