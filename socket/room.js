@@ -24,32 +24,52 @@ const roomHandler = (socket, io) => {
     const room = await pool.query('SELECT * FROM rooms WHERE room_id = $1', [
       room_id,
     ])
-    if (!room?.rows[0]?.participants?.split(', ').find((j) => j == user_id)) {
-      await pool.query(
-        `UPDATE rooms SET participants = $1 WHERE room_id = $2`,
-        [
-          !room.rows[0]?.participants
-            ? user_id
-            : room.rows[0]?.participants + ', ' + user_id,
-          room_id,
-        ]
-      )
+    if (room.rows[0]?.host_id != user_id) {
+      if (!room?.rows[0]?.participants?.split(', ').find((j) => j == user_id)) {
+        await pool.query(
+          `UPDATE rooms SET participants = $1 WHERE room_id = $2`,
+          [
+            !room.rows[0]?.participants
+              ? user_id
+              : room.rows[0]?.participants + ', ' + user_id,
+            room_id,
+          ]
+        )
+      }
     }
 
-    const roomAfterUpdate = await pool.query(
+    const latestRoomDetails = await pool.query(
       'SELECT * FROM rooms WHERE room_id = $1',
       [room_id]
     )
 
-    const participants = await pool.query(
-      `SELECT name from users WHERE id IN (${roomAfterUpdate.rows[0]['participants']})`
-    )
-    socket.emit('room-joined', roomAfterUpdate.rows[0])
+    if (!!latestRoomDetails.rows[0]?.['participants']) {
+      const participants = await pool.query(
+        `SELECT id, name from users WHERE id IN (${latestRoomDetails.rows[0]?.['participants']})`
+      )
+      socket.emit('room-joined', latestRoomDetails.rows[0])
 
-    io.emit(
-      'get-room-participants',
-      participants.rows?.map((j) => j?.name)
-    )
+      io.emit('get-room-participants', participants.rows)
+    } else {
+      socket.emit('room-joined', latestRoomDetails.rows[0])
+
+      io.emit('get-room-participants', [])
+    }
+  })
+
+  //Timer in the room
+  socket.on('start-timer', (duration) => {
+    io.emit('start-timer', duration)
+  })
+
+  //Raise hand in the room
+  socket.on('raise-hand', (userId) => {
+    io.emit('hand-raised', userId)
+  })
+
+  //Lower hand in the room
+  socket.on('lower-hand', (userId) => {
+    io.emit('hand-lowered', userId)
   })
 
   //Leave Room
@@ -71,14 +91,12 @@ const roomHandler = (socket, io) => {
       [room_id]
     )
 
-    if (!!roomAfterUpdate.rows[0]['participants']) {
+    if (!!roomAfterUpdate.rows[0]?.['participants']) {
       const participants = await pool.query(
-        `SELECT name from users WHERE id IN (${roomAfterUpdate.rows[0]['participants']})`
+        `SELECT id, name from users WHERE id IN (${roomAfterUpdate.rows[0]?.['participants']})`
       )
-      io.emit(
-        'get-room-participants',
-        participants?.rows?.map((j) => j?.name)
-      )
+
+      io.emit('get-room-participants', participants.rows)
     } else {
       io.emit('get-room-participants', [])
     }

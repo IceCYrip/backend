@@ -9,7 +9,7 @@ const initaliseTables = async (pool) => {
   const createRoomTable = `
           CREATE TABLE IF NOT EXISTS rooms (
             room_id SERIAL PRIMARY KEY,
-            host_id VARCHAR(255) NOT NULL,
+            host_id INTEGER NOT NULL,
             created_date DATE NOT NULL,
             created_time TIME NOT NULL,
             participants TEXT
@@ -17,7 +17,9 @@ const initaliseTables = async (pool) => {
 
   try {
     await pool.query(createUserTable)
+    console.log('Created user table')
     await pool.query(createRoomTable)
+    console.log('Created room table')
   } catch (err) {
     console.error('Error creating tables: ', err.message)
   }

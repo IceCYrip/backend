@@ -43,20 +43,13 @@ const startServer = async () => {
 
     if (!!userId) {
       userSocketMap[userId] = socket.id
-      console.log('userSocketMap: ', userSocketMap)
     }
-    // io.emit('getConnectedUsers', Object.keys(userSocketMap))
 
     roomHandler(socket, io)
-
-    socket.on('error', (errorMessage) => {
-      console.error('Error received from server: ', errorMessage)
-    })
 
     socket.on('disconnect', () => {
       console.log('user disconnected', socket.id)
       delete userSocketMap[userId]
-      io.emit('getConnectedUsers', Object.keys(userSocketMap))
     })
   })
 }
