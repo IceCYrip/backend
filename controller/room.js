@@ -68,25 +68,5 @@ const checkRoomHost = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 }
-const APIcheck = async (req, res) => {
-  try {
-    const { room_id } = req.body
 
-    const roomAfterUpdate = await pool.query(
-      'SELECT * FROM rooms WHERE room_id = $1',
-      [room_id]
-    )
-
-    const participants = await pool.query(
-      `SELECT name from users WHERE id IN (${roomAfterUpdate.rows[0]['participants']})`
-    )
-
-    return res.status(200).json(participants.rows?.map((j) => j?.name))
-  } catch (error) {
-    console.error('catchError: ', error)
-    // Handle errors, such as unique constraint violations
-    res.status(500).json({ error: 'Internal server error' })
-  }
-}
-
-module.exports = { createRoom, checkRoomHost, roomExists, APIcheck }
+module.exports = { createRoom, checkRoomHost, roomExists }

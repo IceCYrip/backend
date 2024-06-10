@@ -32,7 +32,6 @@ app.post('/login', login)
 app.post('/createRoom', createRoom)
 app.post('/roomExists', roomExists)
 app.post('/checkRoomHost', checkRoomHost)
-app.post('/APIcheck', APIcheck)
 
 const startServer = async () => {
   await initialiseDatabase()
